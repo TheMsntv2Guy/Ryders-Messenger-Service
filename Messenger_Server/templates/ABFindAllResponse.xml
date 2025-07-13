@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <soap:Header>
+        <ServiceHeader xmlns="http://www.msn.com/webservices/AddressBook">
+            <Version>15.01.1408.0000</Version>
+            <CacheKey>12r1:{cacheKey}</CacheKey>
+            <CacheKeyChanged>true</CacheKeyChanged>
+            <PreferredHostName>contacts.msn.com</PreferredHostName>
+            <SessionId>{sessionId}</SessionId>
+        </ServiceHeader>
+    </soap:Header>
+    <soap:Body>
+        <ABFindAllResponse xmlns="http://www.msn.com/webservices/AddressBook">
+            <ABFindAllResult>
+                <groups>
+                    {groups}
+                </groups>
+                <contacts>
+                    {contacts}
+                </contacts>
+                <ab>
+                    <abId>00000000-0000-0000-0000-000000000000</abId>
+                    <abInfo>
+                        <ownerPuid>0</ownerPuid>
+                        <OwnerCID>{userId}</OwnerCID>
+                        <ownerEmail>{email}</ownerEmail>
+                        <fDefault>true</fDefault>
+                        <joinedNamespace>false</joinedNamespace>
+                    </abInfo>
+                    <lastChange>{timestamp}</lastChange>
+                    <DynamicItemLastChanged>0001-01-01T00:00:00</DynamicItemLastChanged>
+                    <createDate>{createdDate}</createDate>
+                </ab>
+            </ABFindAllResult>
+        </ABFindAllResponse>
+    </soap:Body>
+</soap:Envelope>
