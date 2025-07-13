@@ -190,57 +190,6 @@ class MsnServer
             }
         }
 
-        private static async Task HandleStaticFileRequest(HttpListenerContext context, string wwwroot = "wwwroot")
-        {
-            var request = context.Request;
-            var response = context.Response;
-
-            try
-            {
-                // Normalize the path and prevent directory traversal
-                var path = request.Url.AbsolutePath.TrimStart('/');
-                path = Path.Combine(wwwroot, path.Replace("/", "\\"));
-
-                // Ensure we're not going outside the wwwroot directory
-                var fullPath = Path.GetFullPath(path);
-                var rootPath = Path.GetFullPath(wwwroot);
-
-                if (!fullPath.StartsWith(rootPath, StringComparison.OrdinalIgnoreCase))
-                {
-                    response.StatusCode = 403;
-                    await SendSoapResponse(response, "Access denied");
-                    return;
-                }
-
-                if (File.Exists(fullPath))
-                {
-                    var contentType = GetContentType(fullPath);
-                    response.ContentType = contentType;
-
-                    using (var fileStream = File.OpenRead(fullPath))
-                    {
-                        response.ContentLength64 = fileStream.Length;
-                        await fileStream.CopyToAsync(response.OutputStream);
-                    }
-                }
-                else
-                {
-                    response.StatusCode = 404;
-                    await SendSoapResponse(response, "File not found");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[Static File Error] {ex.Message}");
-                response.StatusCode = 500;
-                await SendSoapResponse(response, "Internal server error");
-            }
-            finally
-            {
-                response.Close();
-            }
-        }
-
         private static string GetContentType(string path)
         {
             var extension = Path.GetExtension(path).ToLowerInvariant();
@@ -259,6 +208,70 @@ class MsnServer
                 ".json" => "application/json",
                 _ => "application/octet-stream",
             };
+        }
+
+        private static async Task HandleStaticFileRequest(HttpListenerContext context, string wwwroot = "wwwroot")
+        {
+            var request = context.Request;
+            var response = context.Response;
+
+            try
+            {
+                var path = request.Url.AbsolutePath.TrimStart('/');
+                var fullPath = Path.GetFullPath(Path.Combine(wwwroot, path.Replace("/", "\\")));
+                var rootPath = Path.GetFullPath(wwwroot);
+
+                if (!fullPath.StartsWith(rootPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    response.StatusCode = 403;
+                    await SendSoapResponse(response, "Access denied");
+                    return;
+                }
+
+                if (Directory.Exists(fullPath))
+                {
+                    var indexFile = Path.Combine(fullPath, "index.html");
+                    if (File.Exists(indexFile))
+                    {
+                        await ServeFile(response, indexFile);
+                        return;
+                    }
+                    response.StatusCode = 404;
+                    await SendSoapResponse(response, "File not found");
+                    return;
+                }
+
+                if (File.Exists(fullPath))
+                {
+                    await ServeFile(response, fullPath);
+                    return;
+                }
+
+                response.StatusCode = 404;
+                await SendSoapResponse(response, "File not found");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Static File Error] {ex.Message}");
+                response.StatusCode = 500;
+                await SendSoapResponse(response, "Internal server error");
+            }
+            finally
+            {
+                response.Close();
+            }
+        }
+
+        private static async Task ServeFile(HttpListenerResponse response, string filePath)
+        {
+            var contentType = GetContentType(filePath);
+            response.ContentType = contentType;
+
+            using (var fileStream = File.OpenRead(filePath))
+            {
+                response.ContentLength64 = fileStream.Length;
+                await fileStream.CopyToAsync(response.OutputStream);
+            }
         }
 
         private static async Task ProcessRequestAsync(HttpListenerContext context)
