@@ -1,0 +1,5 @@
+C:\Users\Ryder\Documents\GitHub\Messenger_Server\Messenger_Server\bin\Release\net8.0\publish\linux-x64\Messenger_Server
+C:\Users\Ryder\Documents\GitHub\Messenger_Server\Messenger_Server\bin\Release\net8.0\publish\linux-x64\Messenger_Server.dll
+C:\Users\Ryder\Documents\GitHub\Messenger_Server\Messenger_Server\bin\Release\net8.0\publish\linux-x64\Messenger_Server.deps.json
+C:\Users\Ryder\Documents\GitHub\Messenger_Server\Messenger_Server\bin\Release\net8.0\publish\linux-x64\Messenger_Server.runtimeconfig.json
+C:\Users\Ryder\Documents\GitHub\Messenger_Server\Messenger_Server\bin\Release\net8.0\publish\linux-x64\Messenger_Server.pdb

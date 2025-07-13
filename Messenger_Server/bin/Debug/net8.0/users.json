@@ -1,0 +1,32 @@
+[
+  {
+    "Id": 1,
+    "Email": "a@a.com",
+    "FriendlyName": "\u003C\u003E:\u0022/\\|?*\u0060~!@#$%^\u0026*()=[]{};\u0027\u0022\u003C\u003E:\u0022/\\|?*\u0060~!@#$%^\u0026*()=[]{};\u0027\u0022\u003C\u003E:\u0022/\\|?*\u0060~!@#$%^\u0026*()=[]{};\u0027\u0022\u003C\u003E:\u0022/\\|?*\u0060~!@#$%^\u0026*()=[]{};\u0027\u0022\u003C\u003E:\u0022/\\|?*\u0060~!@",
+    "Status": "FLN",
+    "Capabilities": "0",
+    "MsnObjectPfp": "",
+    "UUID": "a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6",
+    "CustomStatus": ""
+  },
+  {
+    "Id": 2,
+    "Email": "b@b.com",
+    "FriendlyName": "rydersmells",
+    "Status": "FLN",
+    "Capabilities": "0",
+    "MsnObjectPfp": "",
+    "UUID": "b2c3d4e5-f6g7-h8i9-j0k1-l2m3n4o5p6q7",
+    "CustomStatus": ""
+  },
+  {
+    "Id": 3,
+    "Email": "c@c.com",
+    "FriendlyName": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "Status": "FLN",
+    "Capabilities": "0",
+    "MsnObjectPfp": "",
+    "UUID": "ghgg749-f6g7-h8i9-j0k1-l2m3n4o5p6q7",
+    "CustomStatus": ""
+  }
+]
