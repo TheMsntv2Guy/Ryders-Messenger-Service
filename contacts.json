@@ -1,0 +1,30 @@
+[
+  {
+    "Id": 1,
+    "UserId": 3,
+    "ContactId": 1,
+    "List": "FL",
+    "Groups": null
+  },
+  {
+    "Id": 2,
+    "UserId": 3,
+    "ContactId": 1,
+    "List": "AL",
+    "Groups": null
+  },
+  {
+    "Id": 3,
+    "UserId": 1,
+    "ContactId": 3,
+    "List": "FL",
+    "Groups": null
+  },
+  {
+    "Id": 4,
+    "UserId": 1,
+    "ContactId": 3,
+    "List": "AL",
+    "Groups": null
+  }
+]
