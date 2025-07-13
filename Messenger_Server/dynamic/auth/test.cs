@@ -1,4 +1,4 @@
-public static async Task ProcessRequest(HttpListenerContext context)
+static async Task ProcessRequest(HttpListenerContext context)
 {
    // I really hope this works
     var response = context.Response;
