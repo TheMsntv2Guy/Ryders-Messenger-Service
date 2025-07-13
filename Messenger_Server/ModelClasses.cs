@@ -1,21 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Net;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
-using System.Security;
-using System.Text;
-using System.Text.Json;
-using System.Text.RegularExpressions;
-using System.Text.Unicode;
-using System.Threading.Tasks;
-using System.Transactions;
-using System.Xml;
-using System.Xml.Linq;
 
 
 class ModelClasses {
@@ -51,6 +34,7 @@ class ModelClasses {
         public int ContactId { get; set; }
         public string List { get; set; }
         public List<int> Groups { get; set; }
+        public string UUID { get; set; } = Guid.NewGuid().ToString();
     }
 
     public class Phone
