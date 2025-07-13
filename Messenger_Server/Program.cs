@@ -1,14 +1,18 @@
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Security;
 using System.Text;
 using System.Text.Json;
 using System.Xml;
 using System.Xml.Linq;
 using static Commands;
-using static ModelClasses;
 using static Functions;
 using static Global;
+using static ModelClasses;
+using System.CodeDom.Compiler;
+using Microsoft.CSharp;
+using System.Reflection;
 
 public static class XmlHelper
 {
@@ -145,6 +149,9 @@ class MsnServer
 
     class HttpSoapServer
     {
+
+        private static Dictionary<string, Func<HttpListenerContext, Task>> _apiEndpoints = new();
+
         public static async Task Start()
         {
             try
@@ -198,6 +205,7 @@ class MsnServer
                 ".htm" or ".html" => "text/html",
                 ".css" => "text/css",
                 ".asp" or ".aspx" => "text/html",
+                ".asmx" => "text/xml",
                 ".srf" => "text/html",
                 ".js" => "application/javascript",
                 ".png" => "image/png",
@@ -340,6 +348,112 @@ class MsnServer
                 Console.WriteLine($"[HTTP Error] {ex.Message}");
                 response.StatusCode = 500;
                 await SendSoapResponse(response, $"Internal server error: {ex.Message}");
+            }
+        }
+
+
+        private static async Task LoadDynamicHandlers(string baseFolder = "dynamic")
+        {
+            if (!Directory.Exists(baseFolder))
+            {
+                Directory.CreateDirectory(baseFolder);
+                return;
+            }
+
+            var csharpFiles = Directory.GetFiles(baseFolder, "*.cs", SearchOption.AllDirectories);
+            var compiler = new CSharpCodeProvider();
+            var compilerParams = new CompilerParameters
+            {
+                GenerateInMemory = true,
+                GenerateExecutable = false,
+                ReferencedAssemblies = {
+            "System.dll",
+            "System.Net.dll",
+            Assembly.GetExecutingAssembly().Location
+        }
+            };
+
+            foreach (var file in csharpFiles)
+            {
+                try
+                {
+                    var relativePath = Path.GetRelativePath(baseFolder, file);
+                    var endpointPath = relativePath
+                        .Replace(Path.DirectorySeparatorChar, '/')
+                        .Replace(".cs", "")
+                        .ToLower();
+
+                    var sourceCode = await File.ReadAllTextAsync(file);
+                    var className = $"DynamicHandler_{Guid.NewGuid().ToString("N")}";
+
+                    // Wrap the code in a class with a standard interface
+                    var wrappedCode = $@"
+using System;
+using System.Net;
+using System.Threading.Tasks;
+
+public class {className}
+{{
+    {sourceCode}
+
+    public static async Task Handle(HttpListenerContext context)
+    {{
+        // Try to call ProcessRequest if it exists
+        var method = typeof({className}).GetMethod(""ProcessRequest"", 
+            BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase);
+        
+        if (method != null)
+        {{
+            await (Task)method.Invoke(null, new object[] {{ context }});
+            return;
+        }}
+
+        // Fallback to Execute if ProcessRequest doesn't exist
+        method = typeof({className}).GetMethod(""Execute"", 
+            BindingFlags.Public | BindingFlags.Static | BindingFlags.IgnoreCase);
+        
+        if (method != null)
+        {{
+            await (Task)method.Invoke(null, new object[] {{ context }});
+            return;
+        }}
+
+        // No valid handler found
+        context.Response.StatusCode = 501;
+        var error = ""No ProcessRequest or Execute method found"";
+        await context.Response.OutputStream.WriteAsync(
+            System.Text.Encoding.UTF8.GetBytes(error));
+    }}
+}}";
+
+                    var results = compiler.CompileAssemblyFromSource(compilerParams, wrappedCode);
+
+                    if (results.Errors.HasErrors)
+                    {
+                        Console.WriteLine($"[Dynamic API] Error compiling {file}:");
+                        foreach (CompilerError error in results.Errors)
+                        {
+                            Console.WriteLine($"Line {error.Line}: {error.ErrorText}");
+                        }
+                        continue;
+                    }
+
+                    var type = results.CompiledAssembly.GetType(className);
+                    var method = type.GetMethod("Handle", BindingFlags.Public | BindingFlags.Static);
+
+                    if (method != null)
+                    {
+
+                        _apiEndpoints[$"/{endpointPath}"] = (Func<HttpListenerContext, Task>)Delegate.CreateDelegate(
+                            typeof(Func<HttpListenerContext, Task>), method);
+
+                        Console.WriteLine($"[Dynamic API] Loaded endpoint: /{endpointPath}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Dynamic API] Error loading {file}: {ex.Message}");
+                }
             }
         }
 
