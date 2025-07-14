@@ -211,57 +211,75 @@ class MsnServer
             };
         }
 
-        private static async Task HandleStaticFileRequest(HttpListenerContext context, string wwwroot = "wwwroot")
-        {
-            var request = context.Request;
-            var response = context.Response;
-
-            try
-            {
-                var path = request.Url.AbsolutePath.TrimStart('/');
-                var fullPath = Path.GetFullPath(Path.Combine(wwwroot, path.Replace("/", "\\")));
-                var rootPath = Path.GetFullPath(wwwroot);
-
-                if (!fullPath.StartsWith(rootPath, StringComparison.OrdinalIgnoreCase))
-                {
-                    response.StatusCode = 403;
-                    await SendSoapResponse(response, "Access denied");
-                    return;
-                }
-
-                if (Directory.Exists(fullPath))
-                {
-                    var indexFile = Path.Combine(fullPath, "index.html");
-                    if (File.Exists(indexFile))
-                    {
-                        await ServeFile(response, indexFile);
-                        return;
-                    }
-                    response.StatusCode = 404;
-                    await SendSoapResponse(response, "File not found");
-                    return;
-                }
-
-                if (File.Exists(fullPath))
-                {
-                    await ServeFile(response, fullPath);
-                    return;
-                }
-
-                response.StatusCode = 404;
-                await SendSoapResponse(response, "File not found");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[Static File Error] {ex.Message}");
-                response.StatusCode = 500;
-                await SendSoapResponse(response, "Internal server error");
-            }
-            finally
-            {
-                response.Close();
-            }
-        }
+      private static async Task HandleStaticFileRequest(HttpListenerContext context, string wwwroot = "wwwroot")
+      {
+          var request = context.Request;
+          var response = context.Response;
+      
+          try
+          {
+              // Normalize the path by removing leading/trailing slashes and converting to lowercase
+              var path = request.Url.AbsolutePath.Trim('/').ToLowerInvariant();
+              
+              // If root path is requested, default to index.html
+              if (string.IsNullOrEmpty(path))
+              {
+                  path = "index.html";
+              }
+              // If path ends with '/', look for index.html in that directory
+              else if (request.Url.AbsolutePath.EndsWith("/"))
+              {
+                  path = Path.Combine(path, "index.html");
+              }
+              // If path has no extension, try adding .html
+              else if (string.IsNullOrEmpty(Path.GetExtension(path)))
+              {
+                  path += ".html";
+              }
+      
+              var fullPath = Path.GetFullPath(Path.Combine(wwwroot, path.Replace("/", "\\")));
+              var rootPath = Path.GetFullPath(wwwroot);
+      
+              // Security check - ensure the requested path is within the wwwroot directory
+              if (!fullPath.StartsWith(rootPath, StringComparison.OrdinalIgnoreCase))
+              {
+                  response.StatusCode = 403;
+                  await SendSoapResponse(response, "Access denied");
+                  return;
+              }
+      
+              // Check if file exists
+              if (File.Exists(fullPath))
+              {
+                  await ServeFile(response, fullPath);
+                  return;
+              }
+      
+              // If we get here, the file doesn't exist
+              response.StatusCode = 404;
+              
+              // Check if we have a custom 404 page
+              var notFoundPath = Path.Combine(rootPath, "404.html");
+              if (File.Exists(notFoundPath))
+              {
+                  await ServeFile(response, notFoundPath);
+              }
+              else
+              {
+                  await SendSoapResponse(response, "File not found");
+              }
+          }
+          catch (Exception ex)
+          {
+              Console.WriteLine($"[Static File Error] {ex.Message}");
+              response.StatusCode = 500;
+              await SendSoapResponse(response, "Internal server error");
+          }
+          finally
+          {
+              response.Close();
+          }
+      }
 
         private static async Task ServeFile(HttpListenerResponse response, string filePath)
         {
